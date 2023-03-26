@@ -1,0 +1,166 @@
+//Tüm Elementleri Seçmek 78.DERS
+// Todo :yapilacaklar listesi
+//!Arayuze Todo Ekleme
+
+const form = document.querySelector("#todoAddForm");
+const addInput = document.querySelector("#todoName");
+const todoList = document.querySelector(".list-group");
+const firstCardBody = document.querySelectorAll(".card-body")[0];
+const secondCardBody = document.querySelectorAll(".card-body")[1];
+const clearButton = document.querySelector("#clearButton");
+const filterInput = document.querySelector("#todoSearch");
+
+let todos = [];
+
+runEvents();
+
+function runEvents() {
+    form.addEventListener("submit", addTodo);// submit yaparsa addtodo yu calistir
+    document.addEventListener("DOMContentLoaded",pageLoaded);
+    secondCardBody.addEventListener("click",removeTodoToUI);
+    clearButton.addEventListener("click",allTodosEverywhere);
+    filterInput.addEventListener("keyup",filter);
+}
+
+function pageLoaded(){
+    checkTodosFromStorage();
+    todos.forEach(function(todo){
+       addTodoToUI(todo);// onyuzdeki ul nin icine ekliyor
+    });
+}
+
+function filter(e){ // trim sag sol bosluk temizle
+    const filterValue = e.target.value.toLowerCase().trim();// buyuk kucuk harf icin
+    const todoListesi = document.querySelectorAll(".list-group-item");
+    
+    if(todoListesi.length>0){
+        todoListesi.forEach(function(todo){
+            if(todo.textContent.toLowerCase().trim().includes(filterValue)){ // icermek
+            
+                todo.setAttribute("style","display : block");// ekranda gorunsun
+            }else{
+                todo.setAttribute("style","display : none !important");
+            }
+        });
+
+    }else{
+        showAlert("warning","Filtreleme yapmak için en az bir todo olmalıdır!");
+    }
+
+}
+
+
+
+function allTodosEverywhere(){
+   const todoListesi = document.querySelectorAll(".list-group-item");
+   if(todoListesi.length>0){
+    //Ekrandan Silme
+    todoListesi.forEach(function(todo){
+        todo.remove();
+    });
+
+    //Storage'dan Silme
+    todos=[];
+    localStorage.setItem("todos",JSON.stringify(todos));
+    showAlert("success","Başarılı bir şekilde silindi");
+   }else{
+    showAlert("warning","Silmek için en az bir todo olmalıdır");
+   }
+}
+
+function removeTodoToUI(e){
+    if(e.target.className==="fa fa-remove"){
+        //Ekrandan Silme
+       const todo = e.target.parentElement.parentElement;
+       todo.remove();
+
+       //Storage'dan Silme
+       removeTodoToStorage(todo.textContent);
+       showAlert("success","Todo başarıyla silindi.");
+    }
+}
+
+function removeTodoToStorage(removeTodo){
+    checkTodosFromStorage();
+    todos.forEach(function(todo,index){
+        if(removeTodo===todo){
+            todos.splice(index,1); //bir diziden elemani silmek icin splice kullanilir
+        }
+    });
+    localStorage.setItem("todos",JSON.stringify(todos));
+}
+
+function addTodo(e) {
+    const inputText = addInput.value.trim();
+    if (inputText == null || inputText == "") {
+        showAlert("warning", "Lütfen boş bırakmayınız!");
+    } else {
+        //Arayüze ekleme
+        addTodoToUI(inputText);
+        addTodoToStorage(inputText);
+        showAlert("success", "Todo Eklendi.");
+    }
+
+    //storage ekleme
+    e.preventDefault(); // farkli bir sayfaya gitmesin engelle
+}
+
+function addTodoToUI(newTodo) {
+    /*
+<li class="list-group-item d-flex justify-content-between">Todo 1
+    <a href="#" class="delete-item">
+        <i class="fa fa-remove"></i>
+            </a>
+         </li>
+     */
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between";
+    li.textContent = newTodo;
+
+    const a = document.createElement("a");
+    a.href = "#";
+    a.className = "delete-item";
+
+    const i = document.createElement("i");
+    i.className = "fa fa-remove";
+
+    a.appendChild(i);
+    li.appendChild(a);
+    todoList.appendChild(li);
+
+    addInput.value = "";
+
+
+
+}
+
+function addTodoToStorage(newTodo) {
+    checkTodosFromStorage();
+    todos.push(newTodo);
+    localStorage.setItem("todos", JSON.stringify(todos));
+}
+
+function checkTodosFromStorage() {
+    if (localStorage.getItem("todos") === null) {
+        todos = [];
+    } else {
+        todos = JSON.parse(localStorage.getItem("todos"));
+    }
+}
+
+function showAlert(type, message) {
+    /*
+    <div class="alert alert-warning" role="alert">
+    This is a warning alert—check it out!
+  </div>*/
+    const div = document.createElement("div");
+    //   div.className="alert alert-"+type;
+    div.className = `alert alert-${type}`; //litirel template
+    div.textContent = message;
+
+    firstCardBody.appendChild(div);
+
+    setTimeout(function(){
+        div.remove();
+    },2500);//2.5 SANIYE
+}
